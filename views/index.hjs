@@ -2,6 +2,7 @@
 <html>
   <head>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <h1><strong> Tic Tac Toe</strong></h1>
   </head>
   <body>
      <div id=root></div>
