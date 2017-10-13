@@ -1,12 +1,101 @@
-let isXTurn = true; 
-let boardState = Array(9).fill(null); 
+//whoever invokes a function, within that function a new variable 'this' is set to equal to invocter - OOP
+//bind is a way of taking the 'this' value and letting it go to another method
+class Model {
+    constructor() {
+        this.isXTurn = true; 
+        this._boardState = Array(9).fill(null); 
+    }
+     
+    triggerChange() {
+        reloadViews(); 
+    }
+    
+    modifyBoardState(index, value) {
+        this._boardState[index] = value; 
+        this.triggerChange(); 
+    }
+
+    getCurrentBoardState() {
+        return this._boardState; 
+    }
+
+
+}
+
+class Game {
+     render() {
+        let gameDiv = document.createElement('div');
+        gameDiv.className = 'game';
+        
+        let board = new Board(); 
+        gameDiv.appendChild(board.render()); 
+        
+        
+        let historyDiv = document.createElement('div');
+        historyDiv.className = 'game-info'; 
+        gameDiv.appendChild(historyDiv); 
+        
+        return gameDiv; 
+    }
+
+}
+
+class Board {
+    
+  render() {
+        var containerDiv = document.createElement('div'); 
+        containerDiv.className = 'game-board';
+        
+        var gameStatusDiv = document.createElement('div');
+        gameStatusDiv.className = 'status';
+        gameStatusDiv.innerHTML = getGameStatus(); 
+        containerDiv.appendChild(gameStatusDiv); 
+        
+        // add 3 rows with 3 buttons each to make the board
+        
+        for (let i = 0; i < 3; i++) {
+            let boardRowDiv = document.createElement('div');
+            boardRowDiv.className = 'board-row';
+            containerDiv.appendChild(boardRowDiv);
+            
+            for (let j = 0; j < 3; j++) {
+                let squareButton = new Square(i*3 + j); 
+                boardRowDiv.appendChild(squareButton.render());
+            }
+        }
+        
+        return containerDiv; 
+    }
+}
+
+
+class Square {
+    constructor(position) {
+        this.position = position; 
+    }
+    
+    render() {
+        let boardState = model.getCurrentBoardState(); 
+        
+        var squareButton = document.createElement('button');
+        squareButton.className = 'square';
+        squareButton.dataset.position = this.position;
+        squareButton.innerHTML = boardState[this.position];
+        return squareButton; 
+    }
+}
+
+
+
 
 function handleClick(e) {
+    let boardState = model.getCurrentBoardState(); 
+    
     if (boardState[e.target.dataset.position] || calculateWinner()) 
         return; 
-        
-    boardState[e.target.dataset.position] = isXTurn ? "X" : "O";
-    isXTurn = !isXTurn; 
+    
+    model.modifyBoardState(e.target.dataset.position, model.isXTurn ? "X" : "O");  
+    model.isXTurn = !model.isXTurn; 
     reloadViews(); 
 }
 
@@ -20,13 +109,15 @@ function getGameStatus() {
     } else if (!hasAvailableMove()) {
         return "Cats Game"; 
     } else {
-        return  "Next player to move: " + (isXTurn ? "X" : "O"); 
+        return  "Next player to move: " + (model.isXTurn ? "X" : "O"); 
     }
 
 }
 
 
 function hasAvailableMove() {
+  let boardState = model.getCurrentBoardState(); 
+  
   for (let i = 0; i < boardState.length; i++) {
       if (!boardState[i]) 
         return true; 
@@ -51,7 +142,7 @@ function calculateWinner() {
         [2, 4, 6],
       ]; 
      
-     let squareValues = document.getElementsByClassName("square"); 
+     let boardState = model.getCurrentBoardState(); 
      
      for (var i = 0; i < lines.length; i++) {
         var a = lines[i][0]; 
@@ -85,62 +176,10 @@ function removeViewsFromDOM() {
      
 }
 
-
 function addViewsToDOM() {
     var rootDiv = document.getElementById("root");
-    rootDiv.appendChild(renderGameView()); 
+    rootDiv.appendChild(game.render()); 
     assignClickHandlers();
-}
-
-
-function renderGameView() {
-    let gameDiv = document.createElement('div');
-    gameDiv.className = 'game';
-    
-    let boardDiv = document.createElement('div');
-    boardDiv.className = 'game-board'; 
-    boardDiv.append(renderBoardView()); 
-    gameDiv.appendChild(boardDiv); 
-    
-    
-    let historyDiv = document.createElement('div');
-    historyDiv.className = 'game-info'; 
-    gameDiv.appendChild(historyDiv); 
-    
-    return gameDiv; 
-}
-
-
-function renderBoardView() {
-    var containerDiv = document.createElement('div'); 
-        
-    var gameStatusDiv = document.createElement('div');
-    gameStatusDiv.className = 'status';
-    gameStatusDiv.innerHTML = this.getGameStatus(); 
-    containerDiv.appendChild(gameStatusDiv); 
-    
-    // add 3 rows with 3 buttons each to make the board
-    
-    for (let i = 0; i < 3; i++) {
-        let boardRowDiv = document.createElement('div');
-        boardRowDiv.className = 'board-row';
-        containerDiv.appendChild(boardRowDiv);
-        
-        for (let j = 0; j < 3; j++) {
-            let squareButton = renderSquareView(j*3 + i); 
-            boardRowDiv.appendChild(squareButton);
-        }
-    }
-    
-    return containerDiv; 
-}
-
-function renderSquareView(position) {
-    var squareButton = document.createElement('button');
-    squareButton.className = 'square';
-    squareButton.dataset.position = position;
-    squareButton.innerHTML = boardState[position];
-    return squareButton; 
 }
 
 
@@ -153,6 +192,9 @@ function assignClickHandlers() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function(event) { 
-    addViewsToDOM();  
+let model = new Model(); 
+let game = new Game(); 
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    addViewsToDOM(game);  
 }); 
